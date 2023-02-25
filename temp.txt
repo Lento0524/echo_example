@@ -1,0 +1,9 @@
+curl -X POST http://localhost:1323/food \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"コーラ","unit":"缶"}'
+
+  curl -X PATCH http://localhost:1323/food/1 \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"コーラ","unit":"缶"}'
+
+    curl -X DELETE http://localhost:1323/food/1 -H 'Content-Type: application/json'
