@@ -1,0 +1,5 @@
+docker compose up
+docker ps
+docker exec -it ohagi bash
+psql -h localhost -d postgres -U postgres -p 5432 
+
