@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,7 +11,17 @@ import (
 
 func main() {
 	e := echo.New()
-	e.GET("/food/:id", get)
+	db, err := connect()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	c := newController(db)
+	e.GET("/food/:id", c.get)
 	e.GET("/food", getAll)
 	e.POST("/food", post)
 	e.PATCH("/food/:id", patch)
@@ -44,7 +56,18 @@ type foodResponce struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func get(c echo.Context) error {
+type controller struct {
+	db *sql.DB
+}
+
+func newController(db *sql.DB) controller {
+	return controller{
+		db: db,
+	}
+}
+
+func (a controller) get(c echo.Context) error {
+
 	req := new(foodGetRequest)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
