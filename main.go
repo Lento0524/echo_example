@@ -25,7 +25,7 @@ func main() {
 	e.GET("/food", getAll)
 	e.POST("/food", c.post)
 	e.PATCH("/food/:id", patch)
-	e.DELETE("/food/:id", delete)
+	e.DELETE("/food/:id", c.delete)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
@@ -108,8 +108,8 @@ func (a controller) post(c echo.Context) error {
 	}
 	r := &foodResponce{}
 	row, err := a.db.Query("INSERT INTO food (name, unit, created_at, updated_at) VALUES ('" +
-		req.Name + "','" + req.Unit + "','" + time.Now().Format("2006/01/02 15:04:05") +
-		"','" + time.Now().Format("2006/01/02 15:04:05") + "') RETURNING id;")
+		req.Name + "','" + req.Unit + "','" + time.Now().Format("2006/01/02 15:04:05") + "','" +
+		time.Now().Format("2006/01/02 15:04:05") + "') RETURNING id;")
 	if err != nil {
 		log.Println(err)
 		return c.String(http.StatusInternalServerError, "Internal server error")
@@ -127,8 +127,8 @@ func (a controller) post(c echo.Context) error {
 		Id:        r.Id,
 		Name:      req.Name,
 		Unit:      req.Unit,
-		CreatedAt: time.Time{},
-		UpdatedAt: time.Time{},
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	})
 
 }
@@ -147,10 +147,17 @@ func patch(c echo.Context) error {
 	})
 }
 
-func delete(c echo.Context) error {
+func (a controller) delete(c echo.Context) error {
 	req := new(foodDeleteRequest)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
+	id := c.Param("id")
+	_, err := a.db.Exec("DELETE FROM food WHERE id = " + id + ";")
+	if err != nil {
+		log.Println(err)
+		return c.String(http.StatusInternalServerError, "Internal server error")
+	}
+
 	return c.JSON(http.StatusOK, req)
 }
