@@ -23,7 +23,7 @@ func main() {
 	c := newController(db)
 	e.GET("/food/:id", c.get)
 	e.GET("/food", getAll)
-	e.POST("/food", post)
+	e.POST("/food", c.post)
 	e.PATCH("/food/:id", patch)
 	e.DELETE("/food/:id", delete)
 	e.Logger.Fatal(e.Start(":1323"))
@@ -67,11 +67,11 @@ func newController(db *sql.DB) controller {
 }
 
 func (a controller) get(c echo.Context) error {
-
 	req := new(foodGetRequest)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
+
 	return c.JSON(http.StatusOK, foodResponce{
 		Id:        req.Id,
 		Name:      "",
@@ -101,18 +101,36 @@ func getAll(c echo.Context) error {
 	return c.JSON(http.StatusOK, resAll)
 }
 
-func post(c echo.Context) error {
+func (a controller) post(c echo.Context) error {
 	req := new(foodPostRequest)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
+	r := &foodResponce{}
+	row, err := a.db.Query("INSERT INTO food (name, unit, created_at, updated_at) VALUES ('" +
+		req.Name + "','" + req.Unit + "','" + time.Now().Format("2006/01/02 15:04:05") +
+		"','" + time.Now().Format("2006/01/02 15:04:05") + "') RETURNING id;")
+	if err != nil {
+		log.Println(err)
+		return c.String(http.StatusInternalServerError, "Internal server error")
+	}
+	row.Next()
+	err = row.Scan(&r.Id)
+	if err != nil {
+		log.Println(err)
+		return c.String(http.StatusInternalServerError, "Internal server error")
+	}
+
+	log.Println(r.Id)
+
 	return c.JSON(http.StatusOK, foodResponce{
-		Id:        0,
+		Id:        r.Id,
 		Name:      req.Name,
 		Unit:      req.Unit,
 		CreatedAt: time.Time{},
 		UpdatedAt: time.Time{},
 	})
+
 }
 
 func patch(c echo.Context) error {

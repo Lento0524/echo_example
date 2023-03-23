@@ -1,5 +1,14 @@
+dockerをwindowsで立ち上げてクジラのマークが出てきてから始める
+
+//docker-compose.ymlを見てコンテナを立ち上げる
 docker compose up
+
+//dockerのプロセス確認
 docker ps
+
+//DBコンテナに入る
 docker exec -it ohagi bash
+
+//ログイン
 psql -h localhost -d postgres -U postgres -p 5432 
 
